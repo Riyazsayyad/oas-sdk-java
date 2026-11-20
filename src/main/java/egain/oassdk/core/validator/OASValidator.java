@@ -206,7 +206,7 @@ public class OASValidator {
             validateParameters(parameters, errors, path + "." + method);
         }
 
-        // Validate request body (CBD-8623: JSON body must be an object)
+        // Validate request body (CBD-8623: JSON body must be an object or array)
         if (operation.containsKey("requestBody")) {
             validateRequestBody(Util.asStringObjectMap(operation.get("requestBody")),
                     errors, path + "." + method);
@@ -294,7 +294,8 @@ public class OASValidator {
     }
 
     /**
-     * Validate JSON request bodies require an object schema (CBD-8623).
+     * Validate JSON request bodies are an object or array schema (CBD-8623).
+     * A top-level JSON array is valid; scalars are not.
      */
     private void validateRequestBody(Map<String, Object> requestBody, List<String> errors, String path) {
         if (requestBody == null || requestBody.containsKey("$ref")) {
@@ -318,7 +319,7 @@ public class OASValidator {
                 continue;
             }
             errors.add("Request body for " + path + " (" + mediaType
-                    + ") must use an object schema (type object, properties, allOf/oneOf/anyOf, or $ref)");
+                    + ") must use an object or array schema (type object or array, properties, allOf/oneOf/anyOf, or $ref)");
         }
     }
 
@@ -333,7 +334,7 @@ public class OASValidator {
             return true;
         }
         String type = schema.get("type") instanceof String s ? s : null;
-        return "object".equals(type);
+        return "object".equals(type) || "array".equals(type);
     }
 
     /**
