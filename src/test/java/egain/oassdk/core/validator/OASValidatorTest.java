@@ -588,7 +588,32 @@ public class OASValidatorTest {
         paths.put("/folders", pathItem);
 
         ValidationException ex = assertThrows(ValidationException.class, () -> validator.validate(spec));
-        assertTrue(ex.getMessage().contains("must use an object schema"), ex.getMessage());
+        assertTrue(ex.getMessage().contains("must use an object or array schema"), ex.getMessage());
+    }
+
+    @Test
+    public void testJsonRequestBodyArrayType_passes() {
+        Map<String, Object> spec = createValidOpenAPISpec();
+        Map<String, Object> paths = getPaths(spec);
+        Map<String, Object> pathItem = new HashMap<>();
+        Map<String, Object> post = new HashMap<>();
+        post.put("operationId", "createNotes");
+        post.put("responses", Map.of("201", Map.of("description", "Created")));
+        Map<String, Object> items = new HashMap<>();
+        items.put("type", "object");
+        items.put("properties", Map.of("content", Map.of("type", "string")));
+        Map<String, Object> schema = new HashMap<>();
+        schema.put("type", "array");
+        schema.put("minItems", 1);
+        schema.put("items", items);
+        Map<String, Object> requestBody = new HashMap<>();
+        requestBody.put("required", true);
+        requestBody.put("content", Map.of("application/json", Map.of("schema", schema)));
+        post.put("requestBody", requestBody);
+        pathItem.put("post", post);
+        paths.put("/articles/{articleID}/notes", pathItem);
+
+        assertDoesNotThrow(() -> validator.validate(spec));
     }
 
     @Test
